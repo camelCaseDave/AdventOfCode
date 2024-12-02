@@ -44,4 +44,18 @@ public abstract class Puzzle(int? year = null, int? day = null)
         var lines = await File.ReadAllLinesAsync(relativePath, cancellationToken);
         return lines;
     }
+    
+    protected async Task<string> ReadInputFileAsStringAsync(CancellationToken cancellationToken = default)
+    {
+        var basePath = AppContext.BaseDirectory;
+        var relativePath = Path.Combine(basePath, "Puzzles", $"Y{Year}", $"Day{Day:D2}", "input.txt");
+
+        if (!File.Exists(relativePath))
+        {
+            throw new FileNotFoundException($"Input file not found for Y{Year}, Day{Day:D2}: {relativePath}");
+        }
+
+        var text = await File.ReadAllTextAsync(relativePath, cancellationToken);
+        return text;
+    }
 }
