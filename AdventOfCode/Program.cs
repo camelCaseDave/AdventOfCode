@@ -13,6 +13,7 @@ internal abstract class Program
             day = inputDay;
         }
 
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"\nAdvent of Code {year}, Day {day:D2}.\n");
 
         var puzzle = PuzzleLoader.LoadPuzzle(year, day);
