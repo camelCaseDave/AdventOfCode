@@ -1,77 +1,73 @@
-﻿
-namespace DaveClark.AdventOfCode.Puzzles.Y2024;
+﻿namespace DaveClark.AdventOfCode.Puzzles.Y2024;
 
 public class Day08() : Puzzle(2024, 8)
 {
     protected override async Task SolvePuzzleAsync(CancellationToken cancellationToken)
     {
         var input = await ReadInputFileAsync(cancellationToken);
+        var gridSize = input.First().Length;
         var map = new Map(input);
-    }
-
-    public int PartOne(Map map, int gridSize)
-    {
         var antinodes = new HashSet<Antenna>();
 
-        foreach (var antenna in map.Antennae.Where(a => a.Value != '.' && a.Value != '#'))
+        var antennae = map.Antennae
+            .Where(a => a.Value != '.' && a.Value != '#')
+            .GroupBy(a => a.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var frequency in antennae.Values)
         {
-            var equalHzAntennae = map.Antennae.Where(a => a != antenna && a.Value == antenna.Value);
-
-            if (!equalHzAntennae.Any()) continue;
-
-            foreach (var partner in equalHzAntennae)
+            foreach (var antenna in frequency)
             {
-                var dX = 2 * (partner.X - antenna.X);
-                var dY = 2 * (partner.Y - antenna.Y);
+                foreach (var partner in frequency.Where(p => !p.Equals(antenna)))
+                {
+                    var (dX, dY) = (partner.X - antenna.X, partner.Y - antenna.Y);
 
-                var antinode = new Antenna(antenna.X + dX, antenna.Y + dY, '#');
-
-                antinodes.Add(antinode);
+                    for (var (x, y) = (partner.X + dX, partner.Y + dY);
+                         x >= 0 && y >= 0 && x < gridSize && y < gridSize;
+                         x += dX, y += dY)
+                    {
+                        antinodes.Add(new Antenna(x, y, '#'));
+                    }
+                }
             }
+
+            antinodes.UnionWith(frequency); // include antennae in sum
         }
 
-        return antinodes
-            .Where(a => a.IsAntinode && a.IsInBounds(gridSize))
-            .Count();
+        Console.WriteLine($"Part 2: {antinodes.Count}");
     }
 }
 
 public class Antenna(int x, int y, int value) : Coordinate(x, y), IEquatable<Antenna>
 {
-    public int Value { get; set; } = value;
-    public bool IsAntinode => Value == '#';
-    public bool IsInBounds(int gridSize) => X >= 0 && Y >= 0 && X <= gridSize && Y <= gridSize;
+    public int Value { get; } = value;
 
     public override bool Equals(object obj) => Equals(obj as Antenna);
 
-    public bool Equals(Antenna? other) => X == other.X && Y == other.Y;
+    public bool Equals(Antenna? other) => X == other?.X && Y == other?.Y;
 
     public override int GetHashCode() => HashCode.Combine(X, Y);
 }
 
 public abstract class Coordinate(int x, int y)
 {
-    public int X { get; set; } = x;
-    public int Y { get; set; } = y;
+    public int X { get; } = x;
+    public int Y { get; } = y;
 }
 
 public class Map
 {
-    public HashSet<Antenna> Antennae { get; set; } = [];
+    public HashSet<Antenna> Antennae { get; } = [];
 
     public Map(IEnumerable<string> input)
     {
-        int x = 0, y = 0;
-
-        foreach (var line in input.Reverse())
+        var lines = input.Reverse().ToArray();
+        for (var y = 0; y < lines.Length; y++)
         {
-            foreach (var c in line)
+            for (var x = 0; x < lines[y].Length; x++)
             {
-                Antennae.Add(new Antenna(x, y, c));
-                x = x == input.Count() - 1 ? 0 : x + 1;
+                Antennae.Add(new Antenna(x, y, lines[y][x]));
             }
-
-            y++;
         }
     }
 }
