@@ -30,6 +30,8 @@ public class Day12(): Puzzle(2024, 12)
                     .GetAdjacentPlots(farm.Plots)
                     .Where(p => p.Value == plot.Value);
                 
+                // TODO: Part 2 - this won't work.
+                // traverse each direction of the perimeter ensuring they're not double counted
                 currentPlot.Perimeter = 4 - adjacentPlots.Count();
             
                 foreach (var adjacentPlot in adjacentPlots.Where(p => !region.Contains(p)))
